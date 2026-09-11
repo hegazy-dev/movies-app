@@ -1,36 +1,39 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:movies/core/errors/network_exception.dart';
 import 'package:movies/core/errors/server_exception.dart';
 
 class ApiClient {
   static const String baseUrl = 'https://movies-api.accel.li/api/v2/';
 
-  final http.Client _client;
+  final Dio _dio;
 
-  ApiClient({http.Client? client}) : _client = client ?? http.Client();
+  ApiClient({Dio? dio})
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: baseUrl,
+              connectTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 10),
+            ),
+          );
 
   Future<dynamic> get(
     String endpoint, {
-    Map<String, String>? queryParameters,
+    Map<String, dynamic>? queryParameters,
   }) async {
-    final uri = Uri.parse(
-      '$baseUrl$endpoint',
-    ).replace(queryParameters: queryParameters);
-
     try {
-      final response = await _client.get(uri);
+      final response = await _dio.get(
+        endpoint,
+        queryParameters: queryParameters,
+      );
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return jsonDecode(response.body);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw ServerException(e.response!.statusCode ?? 0);
       }
 
-      throw ServerException(response.statusCode);
-    } on SocketException {
-      throw NetworkException('No internet connection');
-    } on http.ClientException {
       throw NetworkException('Network request failed');
     }
   }

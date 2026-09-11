@@ -6,7 +6,7 @@ class MovieCard extends StatelessWidget {
   final String imageUrl;
   final double rating;
 
-  const MovieCard({required this.imageUrl, required this.rating});
+  const MovieCard({super.key, required this.imageUrl, required this.rating});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,20 @@ class MovieCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: Stack(
         children: [
-          Image.asset(imageUrl, fit: BoxFit.cover),
+          Image.network(
+            imageUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(child: Icon(Icons.broken_image));
+            },
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) {
+                return child;
+              }
+
+              return const Center(child: CircularProgressIndicator());
+            },
+          ),
 
           Positioned(
             top: 8,

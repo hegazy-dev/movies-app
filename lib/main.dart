@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'package:movies/core/theme/app_theme.dart';
@@ -6,7 +7,6 @@ import 'package:movies/features/auth/presentation/screens/login_screen.dart';
 import 'package:movies/features/auth/presentation/screens/register_screen.dart';
 import 'package:movies/features/home/presentation/screens/home_screen.dart';
 import 'package:movies/features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,10 +23,8 @@ class MoviesApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-
       theme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
-
       routes: {
         OnboardingScreen.routeName: (_) => const OnboardingScreen(),
         LoginScreen.routeName: (_) => const LoginScreen(),
@@ -34,7 +32,6 @@ class MoviesApp extends StatelessWidget {
         ForgetPasswordScreen.routeName: (_) => const ForgetPasswordScreen(),
         HomeScreen.routeName: (_) => const HomeScreen(),
       },
-
       initialRoute: OnboardingScreen.routeName,
     );
   }

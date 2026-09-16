@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:movies/features/movie_details/presentation/screens/movie_details_screen.dart';
 import 'package:movies/core/constants/app_assets.dart';
 import 'package:movies/core/state/ui_state.dart';
 import 'package:movies/core/theme/app_colors.dart';
@@ -31,6 +32,13 @@ class _HomeTabState extends State<HomeTab> {
   void dispose() {
     pageController.dispose();
     super.dispose();
+  }
+
+  void openMovieDetails(int movieId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => MovieDetailsScreen(movieId: movieId)),
+    );
   }
 
   @override
@@ -100,6 +108,9 @@ class _HomeTabState extends State<HomeTab> {
                       child: MovieCard(
                         imageUrl: movie.mediumCoverImage,
                         rating: movie.rating,
+                        onTap: () {
+                          openMovieDetails(movie.id);
+                        },
                       ),
                     );
                   },
@@ -158,6 +169,9 @@ class _HomeTabState extends State<HomeTab> {
                     return MovieCard(
                       imageUrl: movie.mediumCoverImage,
                       rating: movie.rating,
+                      onTap: () {
+                        openMovieDetails(movie.id);
+                      },
                     );
                   },
                 ),

@@ -13,4 +13,15 @@ class AuthRepository {
   }) async {
     return await _authDataSource.register(email: email, password: password);
   }
+
+  Future<UserCredential> login({
+    required String email,
+    required String password,
+  }) async {
+    return await _authDataSource.login(email: email, password: password);
+  }
+
+  Future<UserCredential> loginWithGoogle() async {
+    return await _authDataSource.loginWithGoogle();
+  }
 }

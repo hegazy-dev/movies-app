@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class DefaultElevatedButton extends StatelessWidget {
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Widget? icon;
 
   const DefaultElevatedButton({
@@ -22,7 +22,7 @@ class DefaultElevatedButton extends StatelessWidget {
       child: icon == null
           ? Text(label)
           : Row(
-              mainAxisAlignment: .center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [icon!, const SizedBox(width: 8), Text(label)],
             ),
     );

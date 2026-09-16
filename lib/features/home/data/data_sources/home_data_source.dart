@@ -1,6 +1,6 @@
 import 'package:movies/core/network/api_client.dart';
 import 'package:movies/features/home/data/models/movie_model.dart';
-import 'package:movies/features/home/data/models/movie_details_model.dart';
+import 'package:movies/features/movie_details/data/models/movie_details_model.dart';
 
 class HomeDataSource {
   final ApiClient _apiClient;
@@ -21,16 +21,5 @@ class HomeDataSource {
           (movieJson) => MovieModel.fromJson(movieJson as Map<String, dynamic>),
         )
         .toList();
-  }
-
-  Future<MovieDetailsModel> getMovieDetails(int movieId) async {
-    final response = await _apiClient.get(
-      'movie_details.json',
-      queryParameters: {'movie_id': movieId},
-    );
-
-    final movieJson = response['data']['movie'] as Map<String, dynamic>;
-
-    return MovieDetailsModel.fromJson(movieJson);
   }
 }

@@ -5,6 +5,7 @@ import 'package:movies/features/browse/presentation/bloc/browse_bloc.dart';
 import 'package:movies/features/browse/presentation/bloc/browse_event.dart';
 import 'package:movies/features/browse/presentation/bloc/browse_state.dart';
 import 'package:movies/features/home/data/models/movie_model.dart';
+import 'package:movies/features/movie_details/presentation/screens/movie_details_screen.dart';
 
 class BrowseTab extends StatefulWidget {
   const BrowseTab({super.key});
@@ -184,76 +185,86 @@ class _MovieCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // =========================
-          // Movie Poster
-          // =========================
-          Image.network(
-            movie.mediumCoverImage,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: const Color(0xFF252525),
-                child: const Center(
-                  child: Icon(
-                    Icons.movie_outlined,
-                    color: Colors.white54,
-                    size: 40,
-                  ),
-                ),
-              );
-            },
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) {
-                return child;
-              }
-
-              return Container(
-                color: const Color(0xFF252525),
-                child: const Center(
-                  child: CircularProgressIndicator(
-                    color: Color(0xFFFFC107),
-                    strokeWidth: 2,
-                  ),
-                ),
-              );
-            },
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MovieDetailsScreen(movieId: movie.id),
           ),
-
-          // =========================
-          // Rating
-          // =========================
-          Positioned(
-            top: 8,
-            left: 7,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.65),
-                borderRadius: BorderRadius.circular(7),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    movie.rating.toStringAsFixed(1),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // =========================
+            // Movie Poster
+            // =========================
+            Image.network(
+              movie.mediumCoverImage,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: const Color(0xFF252525),
+                  child: const Center(
+                    child: Icon(
+                      Icons.movie_outlined,
+                      color: Colors.white54,
+                      size: 40,
                     ),
                   ),
-                  const SizedBox(width: 3),
-                  const Icon(Icons.star, color: Color(0xFFFFC107), size: 13),
-                ],
+                );
+              },
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) {
+                  return child;
+                }
+
+                return Container(
+                  color: const Color(0xFF252525),
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFFFC107),
+                      strokeWidth: 2,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // =========================
+            // Rating
+            // =========================
+            Positioned(
+              top: 8,
+              left: 7,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      movie.rating.toStringAsFixed(1),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    const Icon(Icons.star, color: Color(0xFFFFC107), size: 13),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

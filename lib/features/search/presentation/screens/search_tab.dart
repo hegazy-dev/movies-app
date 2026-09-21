@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:movies/core/state/ui_state.dart';
 import 'package:movies/core/theme/app_colors.dart';
 import 'package:movies/features/home/data/models/movie_model.dart';
+import 'package:movies/features/movie_details/presentation/screens/movie_details_screen.dart';
 import 'package:movies/features/search/presentation/bloc/search_bloc.dart';
 import 'package:movies/features/search/presentation/bloc/search_event.dart';
 import 'package:movies/features/search/presentation/bloc/search_state.dart';
@@ -83,11 +84,11 @@ class _SearchViewState extends State<SearchView> {
                     }
 
                     if (moviesState.status == UiStateStatus.error) {
-                      return Center(
+                      return const Center(
                         child: Text(
                           'Something went wrong',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: Colors.white),
                         ),
                       );
                     }
@@ -166,65 +167,75 @@ class _MovieSearchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.network(
-            movie.mediumCoverImage,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: const Color(0xFF242424),
-                child: const Icon(
-                  Icons.movie_outlined,
-                  color: Colors.white54,
-                  size: 40,
-                ),
-              );
-            },
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) {
-                return child;
-              }
-
-              return Container(
-                color: const Color(0xFF242424),
-                child: const Center(
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              );
-            },
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MovieDetailsScreen(movieId: movie.id),
           ),
-
-          Positioned(
-            top: 6,
-            left: 6,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(.65),
-                borderRadius: BorderRadius.circular(7),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    movie.rating.toStringAsFixed(1),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(
+              movie.mediumCoverImage,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: const Color(0xFF242424),
+                  child: const Icon(
+                    Icons.movie_outlined,
+                    color: Colors.white54,
+                    size: 40,
                   ),
-                  const SizedBox(width: 3),
-                  const Icon(Icons.star, color: Colors.amber, size: 13),
-                ],
+                );
+              },
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) {
+                  return child;
+                }
+
+                return Container(
+                  color: const Color(0xFF242424),
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                );
+              },
+            ),
+
+            Positioned(
+              top: 6,
+              left: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(.65),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      movie.rating.toStringAsFixed(1),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    const Icon(Icons.star, color: Colors.amber, size: 13),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,12 +1,23 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:movies/core/state/ui_state.dart';
 import 'package:movies/core/theme/app_colors.dart';
 import 'package:movies/core/theme/app_text_styles.dart';
+
+import 'package:movies/features/home/data/models/movie_model.dart';
+
 import 'package:movies/features/movie_details/presentation/bloc/movie_details_bloc.dart';
 import 'package:movies/features/movie_details/presentation/bloc/movie_details_event.dart';
 import 'package:movies/features/movie_details/presentation/bloc/movie_details_state.dart';
+
+import 'package:movies/features/profile/presentation/bloc/history_bloc.dart';
+import 'package:movies/features/profile/presentation/bloc/history_event.dart';
+
+import 'package:movies/features/profile/presentation/bloc/watchlist_bloc.dart';
+import 'package:movies/features/profile/presentation/bloc/watchlist_event.dart';
+import 'package:movies/features/profile/presentation/bloc/watchlist_state.dart';
 
 class MovieDetailsScreen extends StatelessWidget {
   static const String routeName = '/movie-details';
@@ -17,8 +28,22 @@ class MovieDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => MovieDetailsBloc()..add(GetMovieDetailsEvent(movieId)),
+    final user = FirebaseAuth.instance.currentUser;
+
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => MovieDetailsBloc()..add(GetMovieDetailsEvent(movieId)),
+        ),
+
+        BlocProvider(
+          create: (_) =>
+              WatchlistBloc()
+                ..add(CheckWatchlistEvent(userId: user!.uid, movieId: movieId)),
+        ),
+
+        BlocProvider(create: (_) => HistoryBloc()),
+      ],
       child: const _MovieDetailsView(),
     );
   }
@@ -62,16 +87,40 @@ class _MovieDetailsView extends StatelessWidget {
             case UiStateStatus.success:
               final movie = movieState.data!;
 
+              // Add the visited movie to History.
+              final user = FirebaseAuth.instance.currentUser;
+
+              if (user != null) {
+                context.read<HistoryBloc>().add(
+                  AddToHistoryEvent(
+                    userId: user.uid,
+                    movie: MovieModel(
+                      id: movie.id,
+                      title: movie.title,
+                      rating: movie.rating,
+                      mediumCoverImage: movie.largeCoverImage,
+                      largeCoverImage: movie.largeCoverImage,
+                      genres: movie.genres,
+                      year: movie.year,
+                    ),
+                  ),
+                );
+              }
+
               return CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
                     child: _MovieHeader(
+                      movieId: movie.id,
                       backgroundImage: movie.backgroundImage,
-                      coverImage: movie.largeCoverImage,
                       title: movie.title,
                       year: movie.year,
+                      largeCoverImage: movie.largeCoverImage,
+                      genres: movie.genres,
+                      rating: movie.rating,
                     ),
                   ),
+
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -79,27 +128,42 @@ class _MovieDetailsView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 18),
+
                           _WatchButton(
                             onPressed: () {
                               // TODO: Open trailer or watch action.
                             },
                           ),
+
                           const SizedBox(height: 14),
+
                           _MovieStats(
                             runtime: movie.runtime,
                             rating: movie.rating,
                           ),
+
                           const SizedBox(height: 26),
-                          _SectionTitle(title: 'Screen Shots'),
+
+                          const _SectionTitle(title: 'Screen Shots'),
+
                           const SizedBox(height: 12),
+
                           _ScreenshotsList(screenshots: movie.screenshots),
+
                           const SizedBox(height: 26),
-                          _SectionTitle(title: 'Genres'),
+
+                          const _SectionTitle(title: 'Genres'),
+
                           const SizedBox(height: 12),
+
                           _GenresList(genres: movie.genres),
+
                           const SizedBox(height: 26),
-                          _SectionTitle(title: 'Description'),
+
+                          const _SectionTitle(title: 'Description'),
+
                           const SizedBox(height: 12),
+
                           Text(
                             movie.description.isEmpty
                                 ? 'No description available'
@@ -109,6 +173,7 @@ class _MovieDetailsView extends StatelessWidget {
                               height: 1.5,
                             ),
                           ),
+
                           const SizedBox(height: 30),
                         ],
                       ),
@@ -124,20 +189,36 @@ class _MovieDetailsView extends StatelessWidget {
 }
 
 class _MovieHeader extends StatelessWidget {
+  final int movieId;
   final String backgroundImage;
-  final String coverImage;
   final String title;
   final int year;
+  final String largeCoverImage;
+  final List<String> genres;
+  final double rating;
 
   const _MovieHeader({
+    required this.movieId,
     required this.backgroundImage,
-    required this.coverImage,
     required this.title,
     required this.year,
+    required this.largeCoverImage,
+    required this.genres,
+    required this.rating,
   });
 
   @override
   Widget build(BuildContext context) {
+    final movie = MovieModel(
+      id: movieId,
+      title: title,
+      rating: rating,
+      mediumCoverImage: largeCoverImage,
+      largeCoverImage: largeCoverImage,
+      genres: genres,
+      year: year,
+    );
+
     return SizedBox(
       height: 560,
       child: Stack(
@@ -147,11 +228,10 @@ class _MovieHeader extends StatelessWidget {
             backgroundImage,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              return Image.network(coverImage, fit: BoxFit.cover);
+              return Image.network(largeCoverImage, fit: BoxFit.cover);
             },
           ),
 
-          // Dark overlay.
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -167,7 +247,6 @@ class _MovieHeader extends StatelessWidget {
             ),
           ),
 
-          // Top buttons.
           Positioned(
             top: 42,
             left: 14,
@@ -178,18 +257,41 @@ class _MovieHeader extends StatelessWidget {
               },
             ),
           ),
+
           Positioned(
             top: 42,
             right: 14,
-            child: _CircleIconButton(
-              icon: Icons.bookmark_border,
-              onPressed: () {
-                // TODO: Add movie to favorites.
+            child: BlocBuilder<WatchlistBloc, WatchlistState>(
+              builder: (context, state) {
+                return _CircleIconButton(
+                  icon: state.isInWatchlist
+                      ? Icons.bookmark
+                      : Icons.bookmark_border,
+                  onPressed: () {
+                    final user = FirebaseAuth.instance.currentUser;
+
+                    if (user == null) {
+                      return;
+                    }
+
+                    if (state.isInWatchlist) {
+                      context.read<WatchlistBloc>().add(
+                        RemoveFromWatchlistEvent(
+                          userId: user.uid,
+                          movieId: movie.id,
+                        ),
+                      );
+                    } else {
+                      context.read<WatchlistBloc>().add(
+                        AddToWatchlistEvent(userId: user.uid, movie: movie),
+                      );
+                    }
+                  },
+                );
               },
             ),
           ),
 
-          // Play button.
           Center(
             child: _PlayButton(
               onPressed: () {
@@ -198,7 +300,6 @@ class _MovieHeader extends StatelessWidget {
             ),
           ),
 
-          // Movie title and year.
           Positioned(
             left: 24,
             right: 24,
@@ -215,7 +316,9 @@ class _MovieHeader extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const SizedBox(height: 10),
+
                 Text(
                   '$year',
                   style: AppTextStyles.textTheme.titleMedium?.copyWith(
@@ -326,11 +429,15 @@ class _MovieStats extends StatelessWidget {
         Expanded(
           child: _StatItem(icon: Icons.favorite, value: '15'),
         ),
+
         const SizedBox(width: 12),
+
         Expanded(
           child: _StatItem(icon: Icons.access_time_filled, value: '$runtime'),
         ),
+
         const SizedBox(width: 12),
+
         Expanded(
           child: _StatItem(icon: Icons.star, value: rating.toStringAsFixed(1)),
         ),
@@ -357,7 +464,9 @@ class _StatItem extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: AppColors.primary, size: 23),
+
           const SizedBox(width: 10),
+
           Text(
             value,
             style: AppTextStyles.textTheme.titleMedium?.copyWith(
@@ -407,7 +516,9 @@ class _ScreenshotsList extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: screenshots.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, __) {
+          return const SizedBox(width: 12);
+        },
         itemBuilder: (context, index) {
           return ClipRRect(
             borderRadius: BorderRadius.circular(14),
